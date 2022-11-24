@@ -15,6 +15,17 @@
 # output = 'data.tgz'
 # gdown.download(url, output, quiet=False)
 
-import tarfile
-with tarfile.open("data.tgz") as housing_tgz_file_obj:
-    housing_tgz_file_obj.extractall(path="/")
+# import tarfile
+# with tarfile.open("data.tgz") as housing_tgz_file_obj:
+#     housing_tgz_file_obj.extractall(path="/")
+
+from cbp.pipeline.pipeline import Pipeline
+import os
+import datetime
+
+ROOT_DIR = os.getcwd()
+artifact_path = os.path.join(ROOT_DIR,"/cbp","/artifact")
+
+
+if __name__=="__main__":
+    pipeline = Pipeline(artifact_path,f"{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}")

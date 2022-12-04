@@ -5,8 +5,8 @@ from cbp.exception import HousingException
 from cbp.logger import logging
 from six.moves import urllib
 import tarfile
-import pandas 
-import numpy
+import pandas as pd
+import numpy as np
 from sklearn.model_selection import StratifiedShuffleSplit
 
 class DataIngestion:
@@ -22,11 +22,13 @@ class DataIngestion:
     def download_data(self):
         try:
             dataset_download_url = self.data_ingestion_config.dataset_download_url
+
             tgz_download_dir = self.data_ingestion_config.tgz_download_dir
+            
             if os.path.exists(tgz_download_dir):
                 os.remove(tgz_download_dir)
 
-            os.makedirs(tgz_download_dir,exis_ok=True)
+            os.makedirs(tgz_download_dir,exist_ok=True)
 
             dataset_filename = os.path.basename(dataset_download_url)
 
@@ -45,7 +47,7 @@ class DataIngestion:
             if os.path.exists(raw_data_dir):
                 os.remove(raw_data_dir)
 
-            os.makedirs(raw_data_dir,exis_ok=True)
+            os.makedirs(raw_data_dir,exist_ok=True)
 
             logging.info(f"Extracting tgz file : [{tgz_file_path}] into dir :[{raw_data_dir}]")
             with tarfile.open(tgz_file_path) as housing_tgz_file_obj:
@@ -59,15 +61,15 @@ class DataIngestion:
         try:
             raw_data_dir = self.data_ingestion_config.raw_data_dir
 
-            file_name = os.lisdir(raw_data_dir)[0]
+            file_name = os.listdir(raw_data_dir)[0]
 
             file_path = os.path.join(raw_data_dir,file_name)
-            logging.info(f"Reading csv file: [{housing_file_path}]")
+            logging.info(f"Reading csv file: [{file_path}]")
 
             dataframe = pd.read_csv(file_path)
 
-            housing_data_frame["income_cat"] = pd.cut(
-                housing_data_frame["median_income"],
+            dataframe["income_cat"] = pd.cut(
+                dataframe["median_income"],
                 bins=[0.0, 1.5, 3.0, 4.5, 6.0, np.inf],
                 labels=[1,2,3,4,5]
             )
@@ -78,9 +80,9 @@ class DataIngestion:
 
             split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
 
-            for train_index,test_index in split.split(housing_data_frame, housing_data_frame["income_cat"]):
-                strat_train_set = housing_data_frame.loc[train_index].drop(["income_cat"],axis=1)
-                strat_test_set = housing_data_frame.loc[test_index].drop(["income_cat"],axis=1)
+            for train_index,test_index in split.split(dataframe, dataframe["income_cat"]):
+                strat_train_set = dataframe.loc[train_index].drop(["income_cat"],axis=1)
+                strat_test_set = dataframe.loc[test_index].drop(["income_cat"],axis=1)
 
             train_file_path = os.path.join(self.data_ingestion_config.ingested_train_dir,file_name)
 
